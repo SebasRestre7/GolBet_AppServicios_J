@@ -1,31 +1,32 @@
-using System.Diagnostics;
+// GolBet.Web/Controllers/MatchesController.cs  (versión completa)
+using GolBet.Entities.Enums;
+using GolBet.Services.Interfaces;
 using Microsoft.AspNetCore.Mvc;
-using GolBet.Web.Models;
 
 namespace GolBet.Web.Controllers;
 
-public class HomeController : Controller
+public class MatchesController : Controller
 {
-    private readonly ILogger<HomeController> _logger;
+    private readonly IMatchService _matchService;
 
-    public HomeController(ILogger<HomeController> logger)
+    public MatchesController(IMatchService matchService)
+        => _matchService = matchService;
+
+    // GET /Matches            -> all matches
+    // GET /Matches?status=Scheduled -> filtered board
+    public async Task<IActionResult> Index(MatchStatus? status)
     {
-        _logger = logger;
+        ViewBag.CurrentStatus = status;
+        var board = await _matchService.GetBoardAsync(status);
+        return View(board);
     }
 
-    public IActionResult Index()
+    // GET /Matches/Detail/3
+    public async Task<IActionResult> Detail(int id)
     {
-        return View();
-    }
+        var match = await _matchService.GetDetailAsync(id);
+        if (match is null) return NotFound();   // HTTP 404
 
-    public IActionResult Privacy()
-    {
-        return View();
-    }
-
-    [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
-    public IActionResult Error()
-    {
-        return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
+        return View(match);
     }
 }
